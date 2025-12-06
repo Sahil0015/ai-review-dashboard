@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import uuid
 import logging
+import certifi
 
 # Configure logging
 logging.basicConfig(
@@ -16,24 +17,46 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # ============================================
-# MONGODB CONNECTION
+# MONGODB CONNECTION WITH SSL/TLS FIX
 # ============================================
 
 MONGODB_URI = os.getenv("MONGODB_URI")
 
+if not MONGODB_URI:
+    logger.error("❌ MONGODB_URI environment variable not set")
+    raise ValueError("MONGODB_URI is required")
+
+# Ensure using mongodb+srv:// format
+if not MONGODB_URI.startswith("mongodb+srv://"):
+    logger.warning("⚠️ URI should use mongodb+srv:// format for Atlas")
+
 try:
-    client = MongoClient(MONGODB_URI)
-    db = client["yelp_review_system"]  # Database name
+    # Configure MongoDB client with explicit SSL/TLS settings
+    client = MongoClient(
+        MONGODB_URI,
+        tls=True,                          # Enable TLS
+        tlsCAFile=certifi.where(),         # Use certifi CA bundle
+        serverSelectionTimeoutMS=10000,    # 10 second timeout
+        connectTimeoutMS=20000,            # 20 second connection timeout
+        socketTimeoutMS=20000,             # 20 second socket timeout
+        retryWrites=True,                  # Enable retry writes
+        w='majority'                       # Write concern
+    )
     
-    # Collections
+    # Test connection
+    client.admin.command('ping')
+    logger.info("✅ MongoDB connection test successful")
+    
+    db = client["yelp_review_system"]
     submissions_collection = db["submissions"]
     evaluations_collection = db["evaluations"]
     
     logger.info(f"✅ Connected to MongoDB: {db.name}")
+    
 except Exception as e:
     logger.error(f"❌ Failed to connect to MongoDB: {e}")
+    logger.error("Check: 1) URI format (mongodb+srv://), 2) Network access whitelist, 3) Credentials")
     raise
-
 
 # ============================================
 # SUBMISSION OPERATIONS
@@ -46,7 +69,7 @@ def save_submission(data: Dict) -> str:
     timestamp = datetime.now().isoformat()
     
     document = {
-        '_id': submission_id,  # Use submission_id as MongoDB _id
+        '_id': submission_id,
         'submission_id': submission_id,
         'timestamp': timestamp,
         'user_rating': data['user_rating'],
@@ -68,17 +91,15 @@ def save_submission(data: Dict) -> str:
     
     return submission_id
 
-
 def get_all_submissions() -> List[Dict]:
     """Get all submissions from MongoDB (sorted by newest first)"""
     logger.info("Fetching all submissions from database...")
     try:
         submissions = list(
-            submissions_collection.find({}, {'_id': 0})  # Exclude MongoDB _id from results
+            submissions_collection.find({}, {'_id': 0})
             .sort('timestamp', DESCENDING)
         )
         
-        # Add rating_match field
         for sub in submissions:
             sub['rating_match'] = sub['user_rating'] == sub['ai_predicted_rating']
         
@@ -87,7 +108,6 @@ def get_all_submissions() -> List[Dict]:
     except Exception as e:
         logger.error(f"❌ Failed to fetch submissions: {e}")
         raise
-
 
 def get_analytics() -> Dict:
     """Calculate analytics from MongoDB data"""
@@ -114,16 +134,13 @@ def get_analytics() -> Dict:
     predicted_ratings = [s['ai_predicted_rating'] for s in submissions]
     sentiments = [s['sentiment'] for s in submissions]
     
-    # Calculate accuracy
     matches = sum(1 for s in submissions if s['user_rating'] == s['ai_predicted_rating'])
     accuracy = (matches / total * 100) if total > 0 else 0
     
-    # Sentiment distribution
     sentiment_dist = {}
     for sentiment in sentiments:
         sentiment_dist[sentiment] = sentiment_dist.get(sentiment, 0) + 1
     
-    # Rating distribution
     rating_dist = {}
     for rating in user_ratings:
         rating_dist[rating] = rating_dist.get(rating, 0) + 1
@@ -136,7 +153,6 @@ def get_analytics() -> Dict:
         'sentiment_distribution': sentiment_dist,
         'rating_distribution': rating_dist
     }
-
 
 # ============================================
 # EVALUATION OPERATIONS
@@ -153,7 +169,6 @@ def save_evaluation_metrics(metrics: Dict):
         logger.error(f"❌ Failed to save evaluation metrics: {e}")
         raise
 
-
 def get_evaluation_metrics() -> List[Dict]:
     """Get all evaluation metrics from MongoDB"""
     logger.info("Fetching evaluation metrics from database...")
@@ -167,7 +182,6 @@ def get_evaluation_metrics() -> List[Dict]:
     except Exception as e:
         logger.error(f"❌ Failed to fetch evaluation metrics: {e}")
         raise
-
 
 # ============================================
 # UTILITY FUNCTIONS
@@ -183,7 +197,6 @@ def clear_all_submissions():
     except Exception as e:
         logger.error(f"❌ Failed to clear submissions: {e}")
         raise
-
 
 def get_submission_by_id(submission_id: str) -> Dict:
     """Get a specific submission by ID"""
