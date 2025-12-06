@@ -5,7 +5,7 @@ import requests
 # CONFIGURATION
 # ============================================
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://ai-review-dashboard.onrender.com"
 
 st.set_page_config(
     page_title="Submit Review",
