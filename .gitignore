@@ -1,0 +1,8 @@
+.env
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+myenv/
+Task2/__pycache__/
+Task2/data/
+Task1/design.txt

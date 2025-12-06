@@ -1,0 +1,4 @@
+Prompt,Accuracy (%),MAE,Validity (%),Exact Match,Off by 1,Off by 2+,Valid Samples
+V1_Simple,67.0,0.35,100.0,134,64,2,200
+V2_Detailed_Criteria,67.0,0.35,100.0,134,64,2,200
+V3_Chain_of_Thought,68.5,0.335,100.0,137,61,2,200

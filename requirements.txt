@@ -1,0 +1,15 @@
+python-dotenv
+pandas
+numpy
+ipykernel
+matplotlib
+seaborn
+fastapi
+uvicorn
+streamlit
+requests
+scikit-learn
+tqdm
+openai
+groq
+pydantic
