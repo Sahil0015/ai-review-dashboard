@@ -13,3 +13,5 @@ tqdm
 openai
 groq
 pydantic
+pymongo[srv]
+plotly

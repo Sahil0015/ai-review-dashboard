@@ -3,7 +3,6 @@ import re
 import os
 import sys
 from typing import Dict, Tuple
-sys.path.append(os.path.abspath(os.path.join(os.getcwd(), "..")))
 from config import client, model
 
 # ============================================

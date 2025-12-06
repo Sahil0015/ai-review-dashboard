@@ -5,7 +5,7 @@ from datetime import datetime
 class ReviewSubmission(BaseModel):
     """User review submission model"""
     rating: int = Field(..., ge=1, le=5, description="User's star rating (1-5)")
-    review_text: str = Field(..., min_length=10, max_length=1000, description="Review content")
+    review_text: str = Field(..., min_length=10, max_length=5000, description="Review content")
     
     @validator('review_text')
     def clean_review(cls, v):
