@@ -19,8 +19,9 @@ streamlit==1.29.0
 
 # HTTP & API
 requests==2.31.0
+httpx==0.24.1
 openai==1.10.0
-groq==0.4.1
+groq==0.9.0
 
 # MongoDB with SSL/TLS support
 pymongo[srv]==4.6.1

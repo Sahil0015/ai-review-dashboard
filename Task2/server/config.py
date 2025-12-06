@@ -2,17 +2,22 @@ from groq import Groq
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
 load_dotenv()
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 if not GROQ_API_KEY:
-    raise ValueError("❌ GROQ_API_KEY not found in .env file!")
+    raise ValueError("❌ GROQ_API_KEY not found in environment variables!")
 
-# Configure native Groq client
-client = Groq(api_key=GROQ_API_KEY)
+# Initialize Groq client with fixed version compatibility
+try:
+    client = Groq(api_key=GROQ_API_KEY)
+    print("✓ Groq client initialized successfully")
+except Exception as e:
+    print(f"❌ Failed to initialize Groq client: {e}")
+    raise
 
-model = "llama-3.1-8b-instant"  
+# Model configuration
+model = "llama-3.1-8b-instant"
 
-print(f"✓ Groq configured successfully")
 print(f"✓ Using model: {model}")
